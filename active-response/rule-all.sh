@@ -11,6 +11,7 @@ IP=$3
 ALERTID=$4
 RULEID=$5
 
+# Exit just in case we mess up the config and receive a syscheck alert
 [[ "$*" =~ syscheck ]] && exit
 
 # This scripts calls others because only one can be executed by OSSEC
@@ -30,6 +31,7 @@ is_ip(){
   return 0
 }
 
+# Set paths of launchable active-response scripts
 LOCAL=$(dirname $0);
 cd $LOCAL
 cd ../
@@ -42,25 +44,25 @@ CMDS="$PWD/bin/command_search.sh"
 TS="$PWD/bin/time_lookup.sh"
 LDAP="$PWD/bin/ldap_lookup.sh"
 
-printf "$(date) $0 $1 $2 $3 $4 $5 $6 $7 $8\n" >> ${PWD}/../logs/active-responses.log
+printf "$(date) $0 $ACTION $USER $IP $ALERTID $RULEID $6 $7 $8\n" >> ${PWD}/../logs/active-responses.log
 
 # Chat
-[[ -x $CHAT ]] && $CHAT $1 $2 $3 $4 $5
+[[ -x $CHAT ]] && $CHAT $ACTION $USER $IP $ALERTID $RULEID
 
 # Collect system user accounts from 'new user' events, only work on rule 5902
-[[ -x $CDB ]] && [[ $RULEID -eq 5902 ]] && $CDB $1 $2 $3 $4 $5
+[[ -x $CDB ]] && [[ $RULEID -eq 5902 ]] && $CDB $ACTION $USER $IP $ALERTID $RULEID
 
 # Search for suspicious commands
-[[ -x $CMDS ]] && $CMDS $1 $2 $3 $4 $5
+[[ -x $CMDS ]] && $CMDS $ACTION $USER $IP $ALERTID $RULEID
 
 # Check if system's clock is off
-[[ -x $TS ]] && $TS $1 $2 $3 $4 $5
+[[ -x $TS ]] && $TS $ACTION $USER $IP $ALERTID $RULEID
 
 # Lookup user's in LDAP
-[[ -x $LDAP ]] && $LDAP $1 $2 $3 $4 $5 $6
+[[ -x $LDAP ]] && $LDAP $ACTION $USER $IP $ALERTID $RULEID
 
 # CIF Feed
-is_ip && [[ -x $CIF ]] && $CIF $1 $2 $3 $4 $5
+is_ip && [[ -x $CIF ]] && $CIF $ACTION $USER $IP $ALERTID $RULEID
 
 # BHR Block
-is_ip && [[ -x $BHR ]] && $BHR $1 $2 $3 $4 $5
+is_ip && [[ -x $BHR ]] && $BHR $ACTION $USER $IP $ALERTID $RULEID
